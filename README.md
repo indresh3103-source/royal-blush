@@ -9,6 +9,15 @@ The repository is an npm-workspaces monorepo:
 - `apps/web` — React 19, TypeScript, Vite, Tailwind CSS, Framer Motion, TanStack Query, Lucide.
 - `apps/api` — Node.js, Express, TypeScript, Prisma, PostgreSQL, S3-compatible object storage, Sharp, ExcelJS.
 
+## Live deployment
+
+- Public invitation: <https://royal-blush.onrender.com>
+- Admin studio: <https://royal-blush.onrender.com/admin>
+- Hosting: Render web service (free plan, Virginia), Neon PostgreSQL, and Neon S3-compatible object storage.
+
+The Render free plan spins the service down after a period of inactivity. The first visit after idle can take
+up to a minute while the service wakes; subsequent requests are fast.
+
 ## What is included
 
 ### Public invitation
@@ -294,6 +303,11 @@ extra proxy configuration.
 
 `npm run build` builds the API (`prisma generate` + TypeScript) and the web app (`tsc -b` + Vite). The API
 serves `apps/web/dist` with a single-page fallback, so `/admin/*` and `/credits` work on refresh.
+
+On Render, use `npm install --include=dev && npm run build` as the build command so TypeScript and type
+packages are installed even when `NODE_ENV=production`. Use `npm start` as the start command and
+`/api/health` as the health check. If `WEB_ORIGIN` and `PUBLIC_SITE_URL` are not set, both default to
+`RENDER_EXTERNAL_URL`, so admin origin checks and calendar links use the public Render URL automatically.
 
 ### Split deployment
 
