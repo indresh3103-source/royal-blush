@@ -1,0 +1,388 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MemberSide {
+  BRIDE
+  GROOM
+  BOTH
+}
+
+enum FamilyRelation {
+  GRANDPARENT
+  PARENT
+  BROTHER
+  SISTER
+  UNCLE
+  AUNT
+  OTHER
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+}
+
+enum AttendanceStatus {
+  ATTENDING
+  DECLINED
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("OWNER")
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  adminUserId String
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  userAgent   String?
+  ipHash      String?
+  createdAt   DateTime  @default(now())
+
+  @@index([adminUserId])
+  @@index([expiresAt])
+}
+
+model Wedding {
+  id                  String   @id @default(cuid())
+  slug                String   @unique @default("royal-blush")
+  title               String
+  tagline             String?
+  invitationMessage   String?
+  brideName           String
+  groomName           String
+  brideShortName      String?
+  groomShortName      String?
+  coupleInitials      String?
+  brideIntro          String?
+  groomIntro          String?
+  familyIntro         String?
+  weddingDate         String
+  weddingTime         String
+  weddingEndTime      String?
+  timezone            String   @default("Asia/Kolkata")
+  city                String?
+  state               String?
+  pinCode             String?
+  venueName           String?
+  venueAddress        String?
+  venueLandmark       String?
+  venueParking        String?
+  venueMapsUrl        String?
+  venueDescription    String?
+  venuePhotoUrl       String?
+  venueContactName    String?
+  venueContactPhone   String?
+  familyContactName   String?
+  familyContactPhone  String?
+  familyContactEmail  String?
+  heroImageUrl        String?
+  bridePortraitUrl    String?
+  groomPortraitUrl    String?
+  familyPhotoUrl      String?
+  brideFamilyPhotoUrl String?
+  groomFamilyPhotoUrl String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  familyMembers   FamilyMember[]
+  events          WeddingEvent[]
+  rituals         WeddingRitual[]
+  media           MediaAsset[]
+  musicTracks     MusicTrack[]
+  galleryImages   GalleryImage[]
+  sections        InvitationSection[]
+  hotels          NearbyHotel[]
+  rsvps           RSVP[]
+  storyMoments    StoryMoment[]
+  theme           ThemeSettings?
+  settings        InvitationSettings?
+}
+
+model FamilyMember {
+  id          String         @id @default(cuid())
+  weddingId   String
+  wedding     Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  side        MemberSide     @default(BOTH)
+  relation    FamilyRelation
+  role        String
+  fullName    String
+  bio         String?
+  photoUrl    String?
+  visible     Boolean        @default(true)
+  order       Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([weddingId, side, relation])
+  @@index([weddingId, order])
+}
+
+model StoryMoment {
+  id          String   @id @default(cuid())
+  weddingId   String
+  wedding     Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  title       String
+  momentDate  String?
+  description String?
+  imageUrl    String?
+  visible     Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([weddingId, order])
+}
+
+model WeddingEvent {
+  id             String   @id @default(cuid())
+  weddingId      String
+  wedding        Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  eventDate      String
+  startTime      String
+  endTime        String?
+  timezone       String?
+  venueName      String?
+  venueAddress   String?
+  city           String?
+  state          String?
+  pinCode        String?
+  mapsUrl        String?
+  dressCode      String?
+  imageUrl       String?
+  contactName    String?
+  contactPhone   String?
+  parkingInfo    String?
+  visible        Boolean  @default(true)
+  archived       Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  attendance     RSVPEventAttendance[]
+  countdownFor   InvitationSettings[]    @relation("CountdownEvent")
+
+  @@index([weddingId, archived, eventDate, startTime])
+  @@index([weddingId, order])
+}
+
+model WeddingRitual {
+  id          String   @id @default(cuid())
+  weddingId   String
+  wedding     Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  ritualDate  String?
+  ritualTime  String?
+  icon        String?
+  visible     Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([weddingId, order])
+}
+
+model MediaAsset {
+  id           String    @id @default(cuid())
+  weddingId    String
+  wedding      Wedding   @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  storageKey   String
+  url          String
+  originalName String
+  mimeType     String
+  type         MediaType
+  size         Int
+  width        Int?
+  height       Int?
+  altText      String?
+  caption      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  galleryImages GalleryImage[]
+  musicTracks   MusicTrack[]
+
+  @@index([weddingId, type])
+  @@index([weddingId, createdAt])
+}
+
+model GalleryImage {
+  id        String     @id @default(cuid())
+  weddingId String
+  wedding   Wedding    @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  section   String     @default("couple")
+  caption   String?
+  altText   String?
+  visible   Boolean    @default(true)
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([weddingId, section, order])
+}
+
+model MusicTrack {
+  id        String     @id @default(cuid())
+  weddingId String
+  wedding   Wedding    @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  title     String
+  artist    String?
+  coverUrl  String?
+  visible   Boolean    @default(true)
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  activeSettings InvitationSettings[] @relation("ActiveMusic")
+
+  @@index([weddingId, order])
+}
+
+model InvitationSection {
+  id        String   @id @default(cuid())
+  weddingId String
+  wedding   Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  key       String
+  label     String
+  visible   Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([weddingId, key])
+  @@index([weddingId, order])
+}
+
+model ThemeSettings {
+  id                 String   @id @default(cuid())
+  weddingId          String   @unique
+  wedding            Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  preset             String   @default("royal-blush")
+  primaryColor       String   @default("#B89555")
+  accentColor        String   @default("#E9BFC7")
+  backgroundColor    String   @default("#F5EBDD")
+  deepColor          String   @default("#762F43")
+  textColor          String   @default("#49372F")
+  headingFont        String   @default("Cormorant Garamond")
+  bodyFont           String   @default("Poppins")
+  curtainStyle       String   @default("blush-velvet")
+  ornamentStyle      String   @default("classic")
+  animationIntensity String   @default("balanced")
+  showMandala        Boolean  @default(true)
+  showFlorals        Boolean  @default(true)
+  galleryLayout      String   @default("editorial")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model InvitationSettings {
+  id                   String   @id @default(cuid())
+  weddingId            String   @unique
+  wedding              Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  introEnabled         Boolean  @default(true)
+  rsvpEnabled          Boolean  @default(true)
+  rsvpRequirePhone     Boolean  @default(false)
+  rsvpAllowGuestCount  Boolean  @default(true)
+  rsvpMaxGuests        Int      @default(10)
+  rsvpClosingDate      String?
+  rsvpTitle            String   @default("Will You Join Us?")
+  rsvpDescription      String?
+  rsvpSuccessMessage   String   @default("Thank you for responding. Your presence and blessings mean a lot to us!")
+  rsvpDeclineMessage   String   @default("We will miss you dearly. Thank you for letting us know, and for your blessings.")
+  rsvpNotifyEmail      String?
+  notifyOnRsvp         Boolean  @default(false)
+  countdownEventId     String?
+  countdownEvent       WeddingEvent? @relation("CountdownEvent", fields: [countdownEventId], references: [id], onDelete: SetNull)
+  activeMusicTrackId   String?
+  activeMusicTrack     MusicTrack?  @relation("ActiveMusic", fields: [activeMusicTrackId], references: [id], onDelete: SetNull)
+  musicEnabled         Boolean  @default(true)
+  defaultVolume        Int      @default(42)
+  vivahTitle           String   @default("Vivah Sanskar")
+  vivahMuhurat         String?
+  vivahDate            String?
+  vivahTime            String?
+  vivahDescription     String?
+  vivahImageUrl        String?
+  shareMessage         String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([countdownEventId])
+  @@index([activeMusicTrackId])
+}
+
+model NearbyHotel {
+  id          String   @id @default(cuid())
+  weddingId   String
+  wedding     Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  distance    String?
+  phone       String?
+  mapsUrl     String?
+  visible     Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([weddingId, order])
+}
+
+model RSVP {
+  id             String           @id @default(cuid())
+  weddingId      String
+  wedding        Wedding          @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  guestName      String
+  phone          String?
+  attendance     AttendanceStatus
+  guestCount     Int              @default(1)
+  message        String?
+  idempotencyKey String
+  ipHash         String?
+  userAgent      String?
+  notified       Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  eventAttendance RSVPEventAttendance[]
+
+  @@unique([weddingId, idempotencyKey])
+  @@index([weddingId, createdAt])
+  @@index([weddingId, attendance])
+  @@index([weddingId, guestName])
+}
+
+model RSVPEventAttendance {
+  id        String       @id @default(cuid())
+  rsvpId    String
+  rsvp      RSVP         @relation(fields: [rsvpId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@unique([rsvpId, eventId])
+  @@index([eventId])
+}

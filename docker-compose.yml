@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: royal-blush-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: royal_blush
+      POSTGRES_PASSWORD: royal_blush_dev
+      POSTGRES_DB: royal_blush
+    ports:
+      - "5432:5432"
+    volumes:
+      - royal_blush_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U royal_blush -d royal_blush"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  royal_blush_data:

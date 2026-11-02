@@ -1,0 +1,36 @@
+{
+  "name": "royal-blush",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Royal Blush - a premium Indian wedding invitation platform with a complete admin suite.",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c magenta,cyan \"npm run dev -w @royal-blush/api\" \"npm run dev -w @royal-blush/web\"",
+    "build": "npm run build -w @royal-blush/api && npm run build -w @royal-blush/web",
+    "start": "npm run start -w @royal-blush/api",
+    "preview": "npm run preview -w @royal-blush/web",
+    "db:generate": "npm run db:generate -w @royal-blush/api",
+    "db:migrate": "npm run db:migrate -w @royal-blush/api",
+    "db:deploy": "npm run db:deploy -w @royal-blush/api",
+    "db:seed": "npm run db:seed -w @royal-blush/api",
+    "db:studio": "npm run db:studio -w @royal-blush/api",
+    "typecheck": "npm run typecheck -w @royal-blush/api && npm run typecheck -w @royal-blush/web",
+    "setup": "npm install && npm run db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.0": true,
+    "prisma@6.19.0": true,
+    "sharp@0.34.5": true,
+    "@prisma/engines@6.19.0": true,
+    "esbuild@0.28.2": true
+  }
+}
